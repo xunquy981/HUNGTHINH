@@ -1,0 +1,203 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../services/db';
+import { InventoryLog, ViewState } from '../types';
+import { formatDisplayDate, removeVietnameseTones, parseISOToDate, getCurrentDate, getStartOfMonth, formatDateISO } from '../utils/helpers';
+import { PageShell, Button } from '../components/ui/Primitives';
+import { TableToolbar } from '../components/table/TableToolbar';
+import { DataTable, ColumnDef } from '../components/ui/DataTable';
+import Pagination from '../components/Pagination';
+import { DateRangeFilter } from '../components/filters/DateRangeFilter';
+import { FilterChip } from '../components/ui/FilterBar';
+import { useDexieTable } from '../hooks/useDexieTable';
+
+const LOG_TYPE_CONFIG: Record<string, { label: string, icon: string, color: string }> = {
+    'sale': { label: 'Xuất bán', icon: 'shopping_cart', color: 'text-rose-600 bg-rose-50 border-rose-100' },
+    'import': { label: 'Nhập kho', icon: 'inventory_2', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' },
+    'adjustment': { label: 'Kiểm kê', icon: 'tune', color: 'text-amber-600 bg-amber-50 border-amber-100' },
+    'revert_delete': { label: 'Hủy đơn', icon: 'history', color: 'text-blue-600 bg-blue-50 border-blue-100' },
+    'return': { label: 'Trả hàng', icon: 'assignment_return', color: 'text-purple-600 bg-purple-50 border-purple-100' },
+};
+
+const InventoryHistory: React.FC<{ onNavigate: (view: ViewState, params?: any) => void }> = ({ onNavigate }) => {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [typeFilter, setTypeFilter] = useState<string>('all');
+    const [dateRange, setDateRange] = useState({ 
+        from: formatDateISO(getStartOfMonth(new Date())), 
+        to: getCurrentDate() 
+    });
+
+    const itemsPerPage = 25;
+
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+        return () => clearTimeout(t);
+    }, [searchTerm]);
+
+    // Thống kê tổng hợp trong kỳ
+    const stats = useLiveQuery(async () => {
+        const logs = await db.inventoryLogs
+            .where('date')
+            .between(dateRange.from, dateRange.to, true, true)
+            .toArray();
+        
+        const totalIn = logs.filter(l => l.changeAmount > 0).reduce((s, l) => s + l.changeAmount, 0);
+        const totalOut = logs.filter(l => l.changeAmount < 0).reduce((s, l) => s + Math.abs(l.changeAmount), 0);
+        const transactionsCount = logs.length;
+
+        return { totalIn, totalOut, transactionsCount };
+    }, [dateRange]);
+
+    const filterFn = useMemo(() => (log: InventoryLog) => {
+        if (debouncedSearch) {
+            const lower = removeVietnameseTones(debouncedSearch);
+            if (!removeVietnameseTones(log.productName).includes(lower) && 
+                !log.sku.toLowerCase().includes(lower) &&
+                !(log.referenceCode && log.referenceCode.toLowerCase().includes(lower))) return false;
+        }
+        if (typeFilter !== 'all' && log.type !== typeFilter) return false;
+        if (dateRange.from && log.date < dateRange.from) return false;
+        if (dateRange.to && log.date > dateRange.to) return false;
+        return true;
+    }, [debouncedSearch, typeFilter, dateRange]);
+
+    const { data: logs, totalItems, currentPage, setCurrentPage, sortState, requestSort, isLoading } = useDexieTable<InventoryLog>({
+        table: db.inventoryLogs,
+        itemsPerPage,
+        filterFn,
+        defaultSort: 'timestamp'
+    });
+
+    const columns: ColumnDef<InventoryLog>[] = [
+        { 
+            header: 'Thời điểm', accessorKey: 'timestamp', width: 'w-44',
+            cell: (l) => (
+                <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{new Date(l.timestamp).toLocaleTimeString('vi-VN')}</span>
+                    <span className="text-[10px] text-slate-400 font-bold">{formatDisplayDate(l.date)}</span>
+                </div>
+            )
+        },
+        { 
+            header: 'Sản phẩm', accessorKey: 'productName',
+            cell: (l) => (
+                <div className="min-w-0 pr-4">
+                    <p className="text-sm font-black text-slate-900 dark:text-white uppercase truncate group-hover:text-blue-600 transition-colors">{l.productName}</p>
+                    <p className="text-[10px] font-mono font-bold text-slate-400 mt-1 uppercase">{l.sku}</p>
+                </div>
+            )
+        },
+        { 
+            header: 'Loại biến động', accessorKey: 'type', width: 'w-36', align: 'center',
+            cell: (l) => {
+                const cfg = LOG_TYPE_CONFIG[l.type] || { label: l.type, icon: 'help', color: 'bg-slate-100 text-slate-500' };
+                return (
+                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase border flex items-center justify-center gap-1.5 ${cfg.color}`}>
+                        <span className="material-symbols-outlined text-[14px]">{cfg.icon}</span>
+                        {cfg.label}
+                    </span>
+                );
+            }
+        },
+        { 
+            header: 'Thay đổi', accessorKey: 'changeAmount', width: 'w-28', align: 'center',
+            cell: (l) => (
+                <span className={`text-sm font-black ${l.changeAmount > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {l.changeAmount > 0 ? `+${l.changeAmount}` : l.changeAmount}
+                </span>
+            )
+        },
+        { 
+            header: 'Tồn kho', width: 'w-32', align: 'center',
+            cell: (l) => (
+                <div className="flex flex-col items-center">
+                    <span className="text-xs font-black text-slate-900 dark:text-white">{l.newStock}</span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Cũ: {l.oldStock}</span>
+                </div>
+            )
+        },
+        { 
+            header: 'Chứng từ', accessorKey: 'referenceCode', width: 'w-32',
+            cell: (l) => l.referenceCode ? (
+                <span className="text-[10px] font-mono font-black text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800 uppercase">
+                    {l.referenceCode}
+                </span>
+            ) : <span className="text-slate-300">---</span>
+        }
+    ];
+
+    return (
+        <PageShell>
+            {/* Thống kê nhanh */}
+            <div className="px-8 pt-8 pb-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white dark:bg-slate-900 p-5 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-5">
+                    <div className="size-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 shadow-inner">
+                        <span className="material-symbols-outlined text-[28px]">trending_up</span>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tổng nhập hàng</p>
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white">+{stats?.totalIn || 0} <span className="text-xs text-slate-400">Cái</span></h3>
+                    </div>
+                </div>
+                <div className="bg-white dark:bg-slate-900 p-5 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-5">
+                    <div className="size-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 shadow-inner">
+                        <span className="material-symbols-outlined text-[28px]">trending_down</span>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tổng xuất hàng</p>
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white">-{stats?.totalOut || 0} <span className="text-xs text-slate-400">Cái</span></h3>
+                    </div>
+                </div>
+                <div className="bg-slate-900 text-white p-5 rounded-[2rem] shadow-xl flex items-center gap-5 relative overflow-hidden">
+                    <div className="size-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[28px]">history_edu</span>
+                    </div>
+                    <div className="relative z-10">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Số đợt biến động</p>
+                        <h3 className="text-2xl font-black">{stats?.transactionsCount || 0} <span className="text-xs text-slate-400">Giao dịch</span></h3>
+                    </div>
+                    <span className="absolute -bottom-6 -right-6 text-[100px] material-symbols-outlined opacity-10 rotate-12">conveyor_belt</span>
+                </div>
+            </div>
+
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden mt-2">
+                <TableToolbar
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    placeholder="Tìm tên sản phẩm, mã SKU, mã đơn hàng..."
+                    leftFilters={
+                        <DateRangeFilter startDate={dateRange.from} endDate={dateRange.to} onChange={(f, t) => setDateRange({ from: f, to: t })} />
+                    }
+                    rightActions={
+                        <Button variant="outline" icon="file_download" onClick={() => {}}>Xuất Excel</Button>
+                    }
+                >
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                        <FilterChip label="Tất cả biến động" isActive={typeFilter === 'all'} onClick={() => setTypeFilter('all')} />
+                        {Object.entries(LOG_TYPE_CONFIG).map(([key, cfg]) => (
+                            <FilterChip key={key} label={cfg.label} isActive={typeFilter === key} onClick={() => setTypeFilter(key)} />
+                        ))}
+                    </div>
+                </TableToolbar>
+
+                <div className="flex-1 overflow-hidden px-8 pt-4 pb-2">
+                    <DataTable 
+                        data={logs} 
+                        columns={columns} 
+                        isLoading={isLoading} 
+                        sort={{ items: sortState, onSort: requestSort }}
+                        emptyIcon="history_toggle_off" 
+                        emptyMessage="Không có dữ liệu biến động kho nào được ghi nhận trong kỳ." 
+                    />
+                </div>
+
+                <div className="px-8 py-5 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-between items-center shrink-0">
+                    <Pagination currentPage={currentPage} totalItems={totalItems} pageSize={itemsPerPage} onPageChange={setCurrentPage} />
+                </div>
+            </div>
+        </PageShell>
+    );
+};
+
+export default InventoryHistory;

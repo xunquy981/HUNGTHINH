@@ -1,0 +1,8 @@
+{
+  "name": "1.Hưng Thịnh ERP Pro v2.0 7/2",
+  "description": "Hệ thống quản trị doanh nghiệp cao cấp cho ngành cơ khí & vòng bi. Tối ưu UX/UI, AI Insight và Hiệu năng Desktop.",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ]
+}

@@ -1,0 +1,130 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* LAYER MANAGEMENT (Z-INDEX) */
+.z-negative { z-index: -1; }
+.z-base { z-index: 0; }
+.z-sticky { z-index: 50; }     /* Filters, Topbars */
+.z-dropdown { z-index: 100; }  /* Dropdowns, Autocomplete */
+.z-drawer { z-index: 150; }    /* Side Drawers */
+.z-modal { z-index: 200; }     /* Centered Modals */
+.z-alert { z-index: 210; }     /* Confirm Alerts */
+.z-toast { z-index: 250; }     /* Toasts / Notifications */
+.z-print { z-index: 9999; }    /* Print Overlays */
+
+/* SCROLLBARS */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.animate-fadeOut {
+  animation: fadeOut 0.2s ease-in forwards;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.animate-slideInRight {
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideOutRight {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+.animate-slideOutRight {
+  animation: slideOutRight 0.25s ease-in forwards;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease-out forwards;
+}
+
+/* Modal Animations - Refined for "Subtle Scale" */
+@keyframes modalEnter {
+  from { 
+    opacity: 0; 
+    transform: scale(0.98) translateY(4px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
+}
+.animate-modal-enter {
+  animation: modalEnter 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes modalExit {
+  from { 
+    opacity: 1; 
+    transform: scale(1) translateY(0); 
+  }
+  to { 
+    opacity: 0; 
+    transform: scale(0.98) translateY(4px); 
+  }
+}
+.animate-modal-exit {
+  animation: modalExit 0.25s ease-in forwards;
+}
+
+@keyframes premiumEntrance {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-premium {
+  animation: premiumEntrance 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* UTILITIES */
+.shadow-premium {
+  box-shadow: 0 10px 40px -10px rgba(14, 165, 233, 0.15);
+}
+.shadow-premium-dark {
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+}
+.shadow-inner-soft {
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Remove Number Input Arrows */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}

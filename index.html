@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>HƯNG THỊNH ERP | Quản Trị Hệ Thống</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;300;400;500;600;700;800;900&display=swap');
+      
+      :root {
+        --brand-primary: #0ea5e9; /* Sky 500 - Fresh & Modern */
+        --transition-speed: 0.3s;
+        --ease-premium: cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      body {
+        font-family: 'Be Vietnam Pro', sans-serif;
+        letter-spacing: -0.01em;
+        -webkit-font-smoothing: antialiased;
+        background-color: #f1f5f9; /* Slate 100 - Softer than white */
+        color: #0f172a; /* Slate 900 - Softer than black */
+        transition: background-color var(--transition-speed) var(--ease-premium);
+      }
+
+      .dark body { background-color: #0b1121; color: #f8fafc; }
+
+      /* Toàn bộ UI sẽ transition mượt mà */
+      *, *::before, *::after {
+        transition: background-color 0.2s ease-out, 
+                    border-color 0.2s ease-out, 
+                    box-shadow 0.3s ease-out,
+                    transform 0.2s ease-out,
+                    opacity 0.2s ease-out;
+      }
+
+      .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+      .filled-icon { font-variation-settings: 'FILL' 1; }
+
+      /* KEYFRAMES */
+      @keyframes premiumEntrance {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-premium { animation: premiumEntrance 0.6s var(--ease-premium) forwards; }
+
+      @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+      .shimmer {
+        background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.1) 50%, transparent 75%);
+        background-size: 200% 100%;
+        animation: shimmer 2s infinite linear;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+      .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #94a3b8; }
+      .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+      
+      /* Glassmorphism Fixes */
+      .glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+      }
+      .dark .glass {
+        background: rgba(15, 23, 42, 0.6);
+        border-color: rgba(255,255,255,0.05);
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              // Override Indigo with a Modern "Azure Blue" Palette
+              indigo: {
+                50: '#f0f9ff',
+                100: '#e0f2fe',
+                200: '#bae6fd',
+                300: '#7dd3fc',
+                400: '#38bdf8',
+                500: '#0ea5e9', // Primary Brand Color (Sky-500 equivalent)
+                600: '#0284c7', // Hover state
+                700: '#0369a1',
+                800: '#075985',
+                900: '#0c4a6e',
+                950: '#082f49',
+              },
+              // Refine Slate for better readability
+              slate: {
+                850: '#151f32', // Custom dark background
+                900: '#0f172a',
+                950: '#020617',
+              },
+              brand: { 
+                primary: '#0ea5e9', 
+                navy: '#0b1121', 
+                surface: '#ffffff' 
+              }
+            },
+            borderRadius: { 
+              '2xl': '1rem', 
+              '3xl': '1.5rem', 
+              '4xl': '2rem',
+              'pill': '9999px'
+            },
+            boxShadow: {
+              'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+              'premium': '0 10px 40px -10px rgba(14, 165, 233, 0.15)', // Blue glow
+              'premium-dark': '0 10px 40px -10px rgba(0, 0, 0, 0.5)',
+              'glow': '0 0 20px rgba(14, 165, 233, 0.4)'
+            },
+            fontFamily: {
+              sans: ['Be Vietnam Pro', 'sans-serif'],
+            },
+            zIndex: {
+              'sidebar': '40',
+              'topbar': '30',
+              'dropdown': '100',
+              'modal': '200',
+              'toast': '250',
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "url": "https://esm.sh/url@^0.11.4",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
+    "jspdf": "https://esm.sh/jspdf@^4.0.0",
+    "xlsx": "https://esm.sh/xlsx@^0.18.5",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "html2canvas": "https://esm.sh/html2canvas@^1.4.1",
+    "path": "https://esm.sh/path@^0.12.7",
+    "canvas-confetti": "https://esm.sh/canvas-confetti@^1.9.4",
+    "fs": "https://esm.sh/fs@^0.0.1-security",
+    "dexie": "https://esm.sh/dexie@^4.2.1",
+    "dexie-react-hooks": "https://esm.sh/dexie-react-hooks@^4.2.0"
+  }
+}
+</script>
+</head>
+  <body class="overflow-hidden bg-slate-50 dark:bg-brand-navy">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
